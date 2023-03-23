@@ -82,7 +82,7 @@ void mark(struct node *tree, unsigned int n_nodes, size_t idx) {
 	}
 }
 
-unsigned int trial(unsigned int levels) {
+unsigned int trial(unsigned int levels, unsigned int r) {
 	unsigned int n_nodes = (1 << levels) - 1;
 	struct node *bob = calloc(n_nodes, sizeof(struct node));
 	unsigned int *alice = calloc(n_nodes, sizeof(unsigned int));
@@ -94,7 +94,17 @@ unsigned int trial(unsigned int levels) {
 	shuffle(alice, n_nodes);
 
 	for (unsigned int i = 0; i < n_nodes; ++i) {
-		mark(bob, n_nodes, alice[i]);
+		switch(r) {
+		case 1:
+			mark(bob, n_nodes, random() % n_nodes);
+			break;
+		case 2:
+			mark(bob, n_nodes, alice[i]);
+			break;
+		default:
+			printf("unknown random process\n");
+			exit(1);
+		}
 
 		if (bob[0].done) {
 			return i;
@@ -106,7 +116,7 @@ unsigned int trial(unsigned int levels) {
 int main() {
 	srandom((unsigned int)time(NULL));
 
-	printf("%d\n", trial(5));
+	printf("%d\n", trial(5, 2));
 
 	return 0;
 }
