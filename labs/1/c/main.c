@@ -121,10 +121,27 @@ unsigned int trial(unsigned int levels, unsigned int r) {
 
 }
 
+double avg_trials(unsigned int level, unsigned int r, unsigned int trials) {
+	unsigned long long total = 0;
+	for(unsigned int i = 0; i < trials; ++i) {
+		total += trial(level, r);
+	}
+
+	return (double)total/trials;
+}
+
 int main() {
 	srandom((unsigned int)time(NULL));
 
-	printf("%d\n", trial(5, 3));
+	printf("Level %10s %10s %10s\n", "R_1", "R_2", "R_3");
+	printf("--------------------------------------\n");
+	for(int level = 2; level <= 17; ++level) {
+		printf("%-5d", level);
+		for (int r = 1; r < 4; ++r) {
+			printf(" %10.3f", avg_trials(level, r, 1000));
+		}
+		printf("\n");
+	}
 
 	return 0;
 }
