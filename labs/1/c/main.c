@@ -93,13 +93,21 @@ unsigned int trial(unsigned int levels, unsigned int r) {
 
 	shuffle(alice, n_nodes);
 
+	unsigned int discount = 0;
+
 	for (unsigned int i = 0; i < n_nodes; ++i) {
 		switch(r) {
 		case 1:
 			mark(bob, n_nodes, random() % n_nodes);
 			break;
 		case 2:
-			mark(bob, n_nodes, alice[i]);
+		case 3:
+			if (r == 3 && bob[alice[i]].marked) {
+				++discount;
+			} else {
+				mark(bob, n_nodes, alice[i]);
+			}
+
 			break;
 		default:
 			printf("unknown random process\n");
@@ -107,7 +115,7 @@ unsigned int trial(unsigned int levels, unsigned int r) {
 		}
 
 		if (bob[0].done) {
-			return i;
+			return i - discount;
 		}
 	}
 
@@ -116,7 +124,7 @@ unsigned int trial(unsigned int levels, unsigned int r) {
 int main() {
 	srandom((unsigned int)time(NULL));
 
-	printf("%d\n", trial(5, 2));
+	printf("%d\n", trial(5, 3));
 
 	return 0;
 }
