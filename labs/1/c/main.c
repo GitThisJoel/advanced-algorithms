@@ -2,9 +2,6 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define LEVELS 5
-#define N_NODES ((1 << LEVELS) - 1)
-
 struct node {
 	unsigned int marked : 1;
 	unsigned int done   : 1;
@@ -18,17 +15,17 @@ void swap(unsigned int *a, unsigned int *b) {
 	*b = tmp;
 }
 
-void shuffle(unsigned int *array) {
+void shuffle(unsigned int *array, unsigned int length) {
 	size_t roll;
-	for (unsigned int i = N_NODES; i > 2; --i) {
+	for (unsigned int i = length; i > 2; --i) {
 		roll = (size_t) (random() % i);
 		swap(&array[i - 1], &array[roll]);
 	}
 }
 
-void print_tree(struct node *tree) {
+void print_tree(struct node *tree, unsigned int levels) {
 	printf("PRINTING TREE:\n");
-	for (unsigned int i = 0; i < LEVELS; ++i) {
+	for (unsigned int i = 0; i < levels; ++i) {
 		unsigned int n = 1 << i;
 		for (unsigned int j = (1 << i) - 1; j < (1 << (i + 1)) - 1; ++j) {
 			printf("%d:%c%c  ", j,
@@ -56,62 +53,60 @@ size_t sibling(size_t idx) {
 	return idx % 2 ? idx + 1 : idx - 1;
 }
 
-int leaf_p(size_t idx) {
-	return idx >= N_NODES / 2;
+int leaf_p(size_t idx, unsigned int n_nodes) {
+	return idx >= n_nodes / 2;
 }
 
-void mark(struct node *tree, size_t idx) {
+void mark(struct node *tree, unsigned int n_nodes, size_t idx) {
 	struct node *u = &tree[idx];
 	u->marked = 1;
 
-	if (leaf_p(idx) ||
+	if (leaf_p(idx, n_nodes) ||
 	    (tree[l_child(idx)].done && tree[r_child(idx)].done)) {
 		u->done = 1;
 	}
 
 	if (idx != 0 && tree[sibling(idx)].marked) {
-		mark(tree, parent(idx));
+		mark(tree, n_nodes, parent(idx));
 	} else if (idx != 0 && tree[parent(idx)].marked) {
-		mark(tree, sibling(idx));
+		mark(tree, n_nodes, sibling(idx));
 	}
 
-	if (leaf_p(idx))
+	if (leaf_p(idx, n_nodes))
 		return;
 
 	if (tree[l_child(idx)].marked && !tree[r_child(idx)].marked) {
-		mark(tree, r_child(idx));
+		mark(tree, n_nodes, r_child(idx));
 	} else if (!tree[l_child(idx)].marked && tree[r_child(idx)].marked) {
-		mark(tree, l_child(idx));
+		mark(tree, n_nodes, l_child(idx));
 	}
 }
 
-int main() {
-	struct node bob[N_NODES];
-	unsigned int alice[N_NODES];
+unsigned int trial(unsigned int levels) {
+	unsigned int n_nodes = (1 << levels) - 1;
+	struct node *bob = calloc(n_nodes, sizeof(struct node));
+	unsigned int *alice = calloc(n_nodes, sizeof(unsigned int));
 
-	srandom((unsigned int)time(NULL));
-
-	struct node empty = {};
-
-	for (int i = 0; i < N_NODES; ++i) {
-		bob[i] = empty;
+	for (unsigned int i = 0; i < n_nodes; ++i) {
 		alice[i] = i;
 	}
 
-	shuffle(alice);
+	shuffle(alice, n_nodes);
 
-	int i;
-	for (i = 0; i < N_NODES; ++i) {
-		printf("Marking %d!\n", alice[i]);
-		mark(bob, alice[i]);
+	for (unsigned int i = 0; i < n_nodes; ++i) {
+		mark(bob, n_nodes, alice[i]);
 
-		print_tree(bob);
 		if (bob[0].done) {
-			break;
+			return i;
 		}
 	}
 
-	printf("Finished after %d rounds\n", i);
+}
+
+int main() {
+	srandom((unsigned int)time(NULL));
+
+	printf("%d\n", trial(5));
 
 	return 0;
 }
