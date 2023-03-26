@@ -44,31 +44,32 @@ def sibling(i):
 def mark_node(i, counter, marked):
     # returns those nodes that were marked
     if not 0 <= i < len(marked):
-        return set()
+        return counter
 
     if marked[i]:
-        return set()
+        return counter
 
     marked[i] = True
     counter += 1
-    marks = {i}
 
     # both children are marks
     if marked[sibling(i)]:
-        marks = marks.union(mark_node(parent(i), counter, marked))
-
+        c = mark_node(parent(i), counter, marked)
+        counter = max(counter, c)
     # one child is marked
     if i < len(marked) // 2 and (marked[left_child(i)] ^ marked[right_child(i)]):
         if marked[left_child(i)]:
-            marks = marks.union(mark_node(right_child(i), counter, marked))
+            c = mark_node(right_child(i), counter, marked)
         elif marked[right_child(i)]:
-            marks = marks.union(mark_node(left_child(i), counter, marked))
+            c = mark_node(left_child(i), counter, marked)
+        counter = max(counter, c)
 
     # parent is marked but not its sibling
     if i > 0 and marked[parent(i)] and not marked[sibling(i)]:
-        marks = marks.union(mark_node(sibling(i), counter, marked))
+        c = mark_node(sibling(i), counter, marked)
+        counter = max(counter, c)
 
-    return marks
+    return counter
 
 
 def print_w_idx(m):
@@ -101,13 +102,11 @@ def next_R3(i, inst, marked):
 def R1(N):
     counter = 0
     marked = [False] * N
-    marked_nodes = set()
 
     rounds = 0
-    while len(marked_nodes) < N:
+    while counter < N:
         n = next_R1(N)
-        m = mark_node(n, counter, marked)
-        marked_nodes = marked_nodes.union(m)
+        counter = mark_node(n, counter, marked)
         rounds += 1
 
     return rounds
@@ -116,15 +115,13 @@ def R1(N):
 def R2(N):
     counter = 0
     marked = [False] * N
-    marked_nodes = set()
 
     inst = gen_inst(N)
 
     rounds = 0
-    while len(marked_nodes) < N:
+    while counter < N:
         n = inst[rounds]
-        m = mark_node(n, counter, marked)
-        marked_nodes = marked_nodes.union(m)
+        counter = mark_node(n, counter, marked)
         rounds += 1
 
     return rounds
@@ -133,15 +130,13 @@ def R2(N):
 def R3(N):
     counter = 0
     marked = [False] * N
-    marked_nodes = set()
 
     inst = gen_inst(N)
 
     rounds = i = 0
-    while len(marked_nodes) < N:
+    while counter < N:
         i, n = next_R3(i, inst, marked)
-        m = mark_node(n, counter, marked)
-        marked_nodes = marked_nodes.union(m)
+        counter = mark_node(n, counter, marked)
         rounds += 1
 
     return rounds
@@ -167,7 +162,9 @@ def main():
             r1_rounds.append(R1(N))
             r2_rounds.append(R2(N))
             r3_rounds.append(R3(N))
-        print(f"{h} | {N} | {pp(r1_rounds)} | {pp(r2_rounds)} | {pp(r3_rounds)}")
+        print(
+            f"{h:<2} | {N:<10} | {pp(r1_rounds):<20} | {pp(r2_rounds):<20} | {pp(r3_rounds)}"
+        )
 
 
 if __name__ == "__main__":
